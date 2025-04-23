@@ -1,9 +1,20 @@
 import {Button, Form, FormControl, FormGroup, FormLabel} from "react-bootstrap";
+import ServiceVoting from "../../../service/ServiceVoting.jsx";
+import {useContext} from "react";
+import {AppContext} from "../../../core/context/Context.jsx";
 
 const CancelPropsal = () => {
 
+    const {wallet } = useContext(AppContext);
+
+    const handleSubmit = async e => {
+        e.preventDefault();
+        const proposalID = Number(e.target[0].value);
+        await ServiceVoting.cancelProposal(proposalID ,wallet);
+    };
+
     return (
-        <Form className='container'>
+        <Form className='container' onSubmit={handleSubmit}>
             <h2> отмена предложения </h2>
             <FormGroup>
                 <FormLabel column={1}>

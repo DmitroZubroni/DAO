@@ -1,4 +1,3 @@
-// src/components/Proposals/SetProposal.jsx
 import React, { useContext } from 'react';
 import { Form, FormGroup, FormLabel, FormControl, Button } from 'react-bootstrap';
 import ServiceVoting from '../../../service/ServiceVoting.jsx';
@@ -15,6 +14,7 @@ const SetProposal = () => {
             const proposeType = e.target[2].value;
             const quorumType = e.target[3].value;
             const params = e.target[5].value.split(',').map(s => s.trim());
+            const amount = Number(e.target[6].value);
 
 
             await ServiceVoting.setProposal(
@@ -68,7 +68,11 @@ const SetProposal = () => {
                     <option value="1">SuperMajority</option>
                     <option value="2">Weighted</option>
                 </FormControl>
+            </FormGroup>
 
+            <FormGroup>
+                <FormLabel column={1}>количесвто wei </FormLabel>
+                <FormControl type="number" placeholder="0" />
             </FormGroup>
 
             <Button type="submit" variant="primary">создать </Button>

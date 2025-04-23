@@ -4,14 +4,15 @@ import abi from "./abi.json";
 class ServiceVoting {
 
     web3 = new Web3(window.ethereum);
-    contractAddess = "0x980a5b0D6C7968E0492cF037D102539102d76242";
+    contractAddess = "0x7576570D4876bB42dc4194c5979BA0163564Dc63";
     contract = new this.web3.eth.Contract(abi, this.contractAddess);
 
     async buyToken(amount, valueAmount, wallet){
         await this.contract.methods.buyToken(amount).send({from: wallet, value: valueAmount});
     }
-    async setProposal( delay, period, proposeType,  quorumType, params, wallet) {
-        await this.contract.methods.setProposal(delay, period, proposeType,  quorumType, params).send({from: wallet});
+
+    async setProposal( delay, period, proposeType,  quorumType, params, valueAmount, wallet) {
+        await this.contract.methods.setProposal(delay, period, proposeType,  quorumType, params).send({from: wallet, value: valueAmount});
     }
 
     async cancelProposal(proposalID, wallet) {
@@ -30,8 +31,8 @@ class ServiceVoting {
         await this.contract.methods.cancelProposal(proposalID).send({from: wallet});
     }
 
-    async getProposes(wallet){
-       return await this.contract.methods.getProposes().call({from: wallet});
+    async getAllProposalIDs(wallet){
+       return await this.contract.methods.getAllProposalIDs().call({from: wallet});
     }
 
 
@@ -39,8 +40,12 @@ class ServiceVoting {
         return await this.contract.methods.getBalance().call({ from: wallet });
     }
 
-    async getProposal(proposalID, wallet){
+    async getProposalFull(proposalID, wallet){
        return await this.contract.methods.getProposes(proposalID).call({from: wallet, });
+    }
+
+    async getProposalVotes(proposalID, wallet){
+        return await this.contract.methods.getProposes(proposalID).call({from: wallet, });
     }
 
 
