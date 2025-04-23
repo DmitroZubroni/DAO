@@ -11,9 +11,9 @@ const Propsal = () => {
 
     useEffect(() => {
         (async () => {
-            const propsalID = await ServiceVoting.getAllProposalIDs(wallet);
-            setPropsals(propsalID || []);
-            console.log(propsalID);
+            const proposalID = await ServiceVoting.getAllProposalIDs(wallet);
+            setPropsals(proposalID || []);
+            console.log(proposalID);
         }) ()
     }, [wallet]);
 
@@ -23,10 +23,10 @@ const Propsal = () => {
             <Header />
 
             {propsals.length > 0 ? (
-                propsals.map((propsal, index) => {
+                propsals.map((proposal, index) => {
                     return (
                         <div key={index}>
-                            <FullCard propsalID = {propsal}/>
+                            <FullCard proposalID = {proposal}/>
                             <hr/>
                         </div>
                     );

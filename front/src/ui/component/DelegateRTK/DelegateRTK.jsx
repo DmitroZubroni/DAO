@@ -10,7 +10,7 @@ const DelegateRTK = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         const to = e.target[0].value;
-        const  amount = Number(e.target[1].value) * 10 ** 12 ;
+        const  amount = Number(e.target[1].value);
         await ServiceVoting.delegateRTK(to, amount ,wallet);
     };
 

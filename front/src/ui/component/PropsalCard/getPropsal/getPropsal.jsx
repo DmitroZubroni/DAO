@@ -3,11 +3,11 @@ import {useContext, useEffect, useState} from "react";
 import {AppContext} from "../../../../core/context/Context.jsx";
 import ServiceVoting from "../../../../service/ServiceVoting.jsx";
 
-const Propsals = (proposalID) => {
+const Propsals = ({proposalID}) => {
 
     const {wallet} = useContext(AppContext);
 
-    const [propsal, setPropsal] = useState({proposeType: 0, proposer: 0, voteEnd: 0, quorumType: 0, status: 0});
+    const [propsal, setPropsal] = useState({proposeID: 0, proposeType: 0, proposer: 0, voteEnd: 0, quorumType: 0, status: 0});
 
     useEffect(() => {
         (async () => {
@@ -15,11 +15,18 @@ const Propsals = (proposalID) => {
             setPropsal(info);
             console.log(info);
         }) ()
-    }, [wallet]);
+    }, [proposalID, wallet]);
 
     return (
-        <Form className="container">
+        <Form>
             <h2> информация о голосование  </h2>
+
+            <FormGroup>
+                <FormLabel column={1}>
+                    ID голосования {propsal.proposeID.toString()}
+                </FormLabel>
+            </FormGroup>
+
             <FormGroup>
                 <FormLabel column={1}>
                     тип голосования {propsal.proposeType.toString()}

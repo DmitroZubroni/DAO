@@ -9,19 +9,27 @@ const SetProposal = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-            const delay = Number(e.target[0].value);
-            const period = Number(e.target[1].value);
+            const delay = (e.target[0].value);
+            const period = (e.target[1].value);
             const proposeType = e.target[2].value;
             const quorumType = e.target[3].value;
-            const params = e.target[5].value.split(',').map(s => s.trim());
-            const amount = Number(e.target[6].value);
-
-
+            const target = e.target[4].value;
+            const amount = e.target[5].value;
+            const amountWEI = e.target[6].value * 10 ** 18;
+            console.log({
+                delay,
+                period,
+                proposeType,
+                quorumType,
+                target,
+                amount,
+                amountWEI,
+                wallet
+            });
             await ServiceVoting.setProposal(
-                delay, period, proposeType,  quorumType, params,wallet
+                delay, period, proposeType,  quorumType, target, amount, amountWEI, wallet
             );
             alert('Предложение создано');
-            e.target.reset();
         } catch (err) {
             console.error(err);
             alert('Ошибка при создании предложения');
@@ -33,7 +41,7 @@ const SetProposal = () => {
             <h2> создать предложение </h2>
 
             <FormGroup>
-                <FormLabel column={1}>Задержка до старта (delay, в блоках)</FormLabel>
+                <FormLabel column={0}>Задержка до старта (delay, в блоках)</FormLabel>
                 <FormControl type="number" placeholder="0" />
             </FormGroup>
 
@@ -43,35 +51,27 @@ const SetProposal = () => {
             </FormGroup>
 
             <FormGroup>
-                <FormLabel column={1}>Тип (A–F)</FormLabel>
-                <FormControl as="select" defaultValue="0">
-                    <option value="0">A</option>
-                    <option value="1">B</option>
-                    <option value="2">C</option>
-                    <option value="3">D</option>
-                    <option value="4">E</option>
-                    <option value="5">F</option>
-                </FormControl>
+                <FormLabel column={2}>Тип (A–F)</FormLabel>
+                <FormControl/>
+            </FormGroup>
+
+            <FormGroup className="mb-3">
+                <FormLabel column={3}>Механизм кворума (0=Простое, 1=Супер, 2=Взвеш.)</FormLabel>
+                <FormControl />
             </FormGroup>
 
             <FormGroup>
-                <FormLabel column={1}>параметры зависит от типа предложения </FormLabel>
+                <FormLabel column={4}>адрес стартапа или участника </FormLabel>
                 <FormControl type="text" placeholder="0x...,0x..." />
             </FormGroup>
 
-
-
-            <FormGroup className="mb-3">
-                <FormLabel column={1}>Механизм кворума (0=Простое, 1=Супер, 2=Взвеш.)</FormLabel>
-                <FormControl as="select" defaultValue="0">
-                    <option value="0">SimpleMajority</option>
-                    <option value="1">SuperMajority</option>
-                    <option value="2">Weighted</option>
-                </FormControl>
+            <FormGroup>
+                <FormLabel column={5}> количество токенов или то на которое изменяется сила токена</FormLabel>
+                <FormControl type="number" placeholder="12" />
             </FormGroup>
 
             <FormGroup>
-                <FormLabel column={1}>количесвто wei </FormLabel>
+                <FormLabel column={6}>количесвто wei </FormLabel>
                 <FormControl type="number" placeholder="0" />
             </FormGroup>
 

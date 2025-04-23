@@ -7,12 +7,12 @@ const Votes = ({proposalID}) => {
 
     const {wallet} = useContext(AppContext);
 
-    const [votes, setVotes] = useState([0,0]);
+    const [targetsInfo,setTargets] = useState({targets: 0, values: 0});
 
     useEffect(() => {
         (async () => {
-            const info = await ServiceVoting.getProposalVotes(proposalID, wallet);
-            setVotes(info);
+            const info = await ServiceVoting.getVoteData(proposalID, wallet);
+            setTargets(info);
             console.log(info);
         }) ()
     }, [proposalID, wallet]);
@@ -21,13 +21,13 @@ const Votes = ({proposalID}) => {
         <Form>
             <FormGroup>
                 <FormLabel column={1}>
-                    голоса против {votes[0]?.toString() || 0}
+                    указаный адрес  {targetsInfo.targets.toString()}
                 </FormLabel>
             </FormGroup>
 
             <FormGroup>
                 <FormLabel column={1}>
-                    голоса за {votes[1]?.toString() || 0}
+                    количество {(Number(targetsInfo.values) / 10 ** 18).toFixed(0)}
                 </FormLabel>
             </FormGroup>
 
