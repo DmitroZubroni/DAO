@@ -1,33 +1,32 @@
 import { Form,  FormGroup, FormLabel} from "react-bootstrap";
-import {useContext, useEffect, useState} from "react";
-import {AppContext} from "../../../../core/context/Context.jsx";
+import { useEffect, useState} from "react";
 import ServiceVoting from "../../../../service/ServiceVoting.jsx";
 
 const Votes = ({proposalID}) => {
 
-    const {wallet} = useContext(AppContext);
 
-    const [votes, setVotes] = useState([0,0]);
+    const [votes, setVotes] = useState({forVotes: 0, againstVotes: 0});
 
     useEffect(() => {
         (async () => {
-            const info = await ServiceVoting.getProposalVotes(proposalID, wallet);
+            const info = await ServiceVoting.getProposalVotes(proposalID);
             setVotes(info);
             console.log(info);
         }) ()
-    }, [proposalID, wallet]);
+    }, [proposalID]);
 
     return (
         <Form>
+            <h2> количество голосов</h2>
             <FormGroup>
                 <FormLabel column={1}>
-                    голоса против {votes[0]?.toString() || 0}
+                    голоса против {votes.againstVotes?.toString() || 0}
                 </FormLabel>
             </FormGroup>
 
             <FormGroup>
                 <FormLabel column={1}>
-                    голоса за {votes[1]?.toString() || 0}
+                    голоса за {votes.forVotes?.toString() || 0}
                 </FormLabel>
             </FormGroup>
 

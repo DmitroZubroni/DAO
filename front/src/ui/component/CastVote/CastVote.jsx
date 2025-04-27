@@ -23,7 +23,7 @@ const CastVote = () => {
                     ID предложения
                 </FormLabel>
 
-                <FormControl/>
+                <FormControl type="number" placeholder="12" min={1}/>
             </FormGroup>
 
             <FormGroup>
@@ -38,7 +38,7 @@ const CastVote = () => {
                     количество токенов которыми вы отдайте на голосование
                 </FormLabel>
 
-                <FormControl/>
+                <FormControl type="number" placeholder="12" min={1}/>
             </FormGroup>
 
             <Button type="submit" color="primary"> прогосоовать </Button>

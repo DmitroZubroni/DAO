@@ -1,21 +1,19 @@
 import { Form,  FormGroup, FormLabel} from "react-bootstrap";
-import {useContext, useEffect, useState} from "react";
-import {AppContext} from "../../../../core/context/Context.jsx";
+import { useEffect, useState} from "react";
 import ServiceVoting from "../../../../service/ServiceVoting.jsx";
 
 const Propsals = ({proposalID}) => {
 
-    const {wallet} = useContext(AppContext);
 
     const [propsal, setPropsal] = useState({proposeID: 0, proposeType: 0, proposer: 0, voteEnd: 0, quorumType: 0, status: 0});
 
     useEffect(() => {
         (async () => {
-            const info = await ServiceVoting.getProposalFull(proposalID, wallet);
+            const info = await ServiceVoting.getProposalFull(proposalID);
             setPropsal(info);
             console.log(info);
         }) ()
-    }, [proposalID, wallet]);
+    }, [proposalID]);
 
     return (
         <Form>

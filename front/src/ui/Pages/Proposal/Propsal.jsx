@@ -1,21 +1,19 @@
 import Header from "../../component/Header/Header.jsx";
-import {useContext, useEffect, useState} from "react";
+import { useEffect, useState} from "react";
 import ServiceVoting from "../../../service/ServiceVoting.jsx";
-import {AppContext} from "../../../core/context/Context.jsx";
 import FullCard from "../../component/PropsalCard/Card/FullCard.jsx";
 
 const Propsal = () => {
 
     const [propsals, setPropsals] = useState([]);
-    const {wallet} = useContext(AppContext);
 
     useEffect(() => {
         (async () => {
-            const proposalID = await ServiceVoting.getAllProposalIDs(wallet);
+            const proposalID = await ServiceVoting.getAllProposalIDs();
             setPropsals(proposalID || []);
             console.log(proposalID);
         }) ()
-    }, [wallet]);
+    }, []);
 
 
     return (

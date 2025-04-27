@@ -15,7 +15,6 @@ const SetProposal = () => {
             const quorumType = e.target[3].value;
             const target = e.target[4].value;
             const amount = e.target[5].value;
-            const amountWEI = e.target[6].value * 10 ** 18;
             console.log({
                 delay,
                 period,
@@ -23,11 +22,10 @@ const SetProposal = () => {
                 quorumType,
                 target,
                 amount,
-                amountWEI,
                 wallet
             });
             await ServiceVoting.setProposal(
-                delay, period, proposeType,  quorumType, target, amount, amountWEI, wallet
+                delay, period, proposeType,  quorumType, target, amount, wallet
             );
             alert('Предложение создано');
         } catch (err) {
@@ -68,11 +66,6 @@ const SetProposal = () => {
             <FormGroup>
                 <FormLabel column={5}> количество токенов или то на которое изменяется сила токена</FormLabel>
                 <FormControl type="number" placeholder="12" />
-            </FormGroup>
-
-            <FormGroup>
-                <FormLabel column={6}>количесвто wei </FormLabel>
-                <FormControl type="number" placeholder="0" />
             </FormGroup>
 
             <Button type="submit" variant="primary">создать </Button>

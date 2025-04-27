@@ -4,22 +4,22 @@ import abi from "./abi.json";
 class ServiceVoting {
 
     web3 = new Web3(window.ethereum);
-    contractAddess = "0xcfea908CF0fdc3B0E317902B94036aEC89e4f107";
+    contractAddess = "0xd2870376f0e53206C3dca4C1273dbF66308C1759";
     contract = new this.web3.eth.Contract(abi, this.contractAddess);
 
     async buyToken(amount, valueAmount, wallet){
         await this.contract.methods.buyToken(amount).send({from: wallet, value: valueAmount});
     }
-    async setProposal( delay, period, proposeType, quorumType, target, amount, valueAmount, wallet) {
-        await this.contract.methods.setProposal(delay, period, proposeType, quorumType, target, amount).send({from: wallet, value: valueAmount});
+    async setProposal( delay, period, proposeType, quorumType, target, amount, wallet) {
+        await this.contract.methods.setProposal(delay, period, proposeType, quorumType, target, amount).send({from: wallet});
     }
 
     async cancelProposal(proposalID, wallet) {
         await this.contract.methods.cancelProposal(proposalID).send({from: wallet});
     }
 
-    async castVote(proposalId, support, amount, wallet){
-        await this.contract.methods.castVote(proposalId, support, amount).send({from: wallet});
+    async castVote(proposalID, support, amount, wallet){
+        await this.contract.methods.castVote(proposalID, support, amount).send({from: wallet});
     }
 
     async delegateRTK(to, amount, wallet){
@@ -39,16 +39,16 @@ class ServiceVoting {
         return await this.contract.methods.getBalance().call({ from: wallet });
     }
 
-    async getProposalFull(proposalID, wallet) {
-        return await this.contract.methods.getProposalFull(proposalID).call({ from: wallet });
+    async getProposalFull(proposalID) {
+        return await this.contract.methods.getProposalFull(proposalID).call();
     }
 
-    async getProposalVotes(proposalID, wallet) {
-        return await this.contract.methods.getProposalVotes(proposalID).call({ from: wallet });
+    async getProposalVotes(proposalID) {
+        return await this.contract.methods.getProposalVotes(proposalID).call();
     }
 
-    async getVoteData(proposalID, wallet) {
-        return await this.contract.methods.getVoteData(proposalID).call({ from: wallet });
+    async getVoteData(proposalID) {
+        return await this.contract.methods.getVoteData(proposalID).call();
     }
 }
 export default new ServiceVoting();

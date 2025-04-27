@@ -22,7 +22,7 @@ const DelegateRTK = () => {
                     кому вы дилигируете
                 </FormLabel>
 
-                <FormControl/>
+                <FormControl placeholder="адрес"/>
             </FormGroup>
 
             <FormGroup>
@@ -30,7 +30,7 @@ const DelegateRTK = () => {
                     сколько
                 </FormLabel>
 
-                <FormControl/>
+                <FormControl type="number" placeholder="12" min={1}/>
             </FormGroup>
 
             <Button type="submit" color="primary"> делегировать </Button>

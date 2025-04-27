@@ -1,24 +1,22 @@
 import { Form,  FormGroup, FormLabel} from "react-bootstrap";
-import {useContext, useEffect, useState} from "react";
-import {AppContext} from "../../../../core/context/Context.jsx";
+import { useEffect, useState} from "react";
 import ServiceVoting from "../../../../service/ServiceVoting.jsx";
 
 const Votes = ({proposalID}) => {
-
-    const {wallet} = useContext(AppContext);
 
     const [targetsInfo,setTargets] = useState({targets: 0, values: 0});
 
     useEffect(() => {
         (async () => {
-            const info = await ServiceVoting.getVoteData(proposalID, wallet);
+            const info = await ServiceVoting.getVoteData(proposalID);
             setTargets(info);
             console.log(info);
         }) ()
-    }, [proposalID, wallet]);
+    }, [proposalID]);
 
     return (
         <Form>
+            <h2> куда и сколько </h2>
             <FormGroup>
                 <FormLabel column={1}>
                     указаный адрес  {targetsInfo.targets.toString()}

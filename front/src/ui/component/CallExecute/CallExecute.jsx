@@ -21,7 +21,7 @@ const CallExecute = () => {
                     ID предложения
                 </FormLabel>
 
-                <FormControl type="number" placeholder="1, 2, 3 ..."/>
+                <FormControl type="number" placeholder="1, 2, 3 ..." min={1}/>
 
             </FormGroup>
 
