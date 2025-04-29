@@ -28,24 +28,16 @@ contract MyGovernance is
 
     // Структура, описывающая информацию о предложении
     struct ProposeLib {
-        uint256 proposeID;
-        ProposeType proposeType;
+        uint256 proposeId;
         address proposer;
-        uint256 voteEnd;
-        QuorumMechanism quorumType;
-        ProposalState status;
-    }
-
-    // Структура, описывающая голосование
-    struct Vote {
-        uint256 id;
         address[] targets;
         uint256[] values;
         bytes[] calldatas;
+        uint256 voteEnd;
+        ProposeType proposeType;
+        QuorumMechanism quorumType;
+        ProposalState status;
     }
-
-    // Маппинг ID предложения -> структура голосования
-    mapping(uint256 => Vote) private voteData;
 
     // Маппинг ID предложения -> счетчик голосов
     mapping(uint256 => ProposalVote) private _proposalVotes;
@@ -59,10 +51,7 @@ contract MyGovernance is
     // Членство в DAO
     mapping(address => bool) public isMember;
 
-    // Делегированные RTK-токены для голосов
-    mapping(address => uint256) public delegatedRTK;
-
-    // Замена массива на маппинг
+    // маппинг всех предложений
     mapping(uint256 => ProposeLib) private proposeMapping;
 
     // мапинг для определения того каким количеством проголосовал пользователь по определённому голосованию
@@ -108,14 +97,14 @@ contract MyGovernance is
         rtkCoin = RTKCoin(_rtkCoin);
 
         // Добавляем участников DAO
-        addMember(tom);
-        addMember(ben);
-        addMember(rick);
+        isMember[tom] = true;
+        isMember[ben] = true;
+        isMember[rick] = true;
 
         // Делегируем системные токены
         profiCoin.delegate(tom);
         profiCoin.delegate(ben);
-        profiCoin.delegate(rick);
+        profiCoin.delegate(rick); 
         profiCoin.delegate(jack);
 
         // Выпускаем RTK-токены
@@ -139,73 +128,72 @@ contract MyGovernance is
             unicode"Недостаточно средств"
         );
         rtkCoin.transfer(msg.sender, amount);
-    }
+    } 
 
-    // расчёт силы пользователя по определённому предложению
-    function _calculateVotingPower(address _member, uint256 proposalID)
+    //  Подсчет голосовой силы пользователя (PROFI и RTK)
+    function _calculateVotingPower(address _member, uint256 amount)
         private
         view
         returns (uint256)
     {
-        // Получаем количество PROFI токенов, заблокированных на голосование
-        uint256 amount = lockedTokens[proposalID][_member];
-
-        // Вычисляем силу по PROFI и RTK, с учётом делегированных RTK
         uint256 profiP = amount / profiPower;
-        uint256 rtkP = delegatedRTK[_member] / rtkPower;
-
+        uint256 rtkP =  rtkCoin.getVotes(_member) / rtkPower;
         return profiP + rtkP;
     }
 
-    function _checkQuorum(ProposalVote storage vote, QuorumMechanism quorumType)
+    function _quorumReached(uint256 proposalId)
         internal
         view
+        override(Governor, GovernorCountingSimple)
         returns (bool)
     {
-        uint256 totalVotes = vote.forVotes + vote.againstVotes;
+        ProposalVote storage vote = _proposalVotes[proposalId];
+        QuorumMechanism quorumType = proposeMapping[proposalId].quorumType;
+        uint256 totalVotes = vote.againstVotes + vote.forVotes;
 
-        if (quorumType == QuorumMechanism.SimpleMajority) {
+        if (quorumType == QuorumMechanism.Weighted) {
+            // Голоса по весу: зависит от количества токенов
             return vote.forVotes > vote.againstVotes;
         } else if (quorumType == QuorumMechanism.SuperMajority) {
-            return vote.forVotes * 3 > totalVotes * 2; // 2/3 голосов
-        } else {
-            return false;
+            //Супер большинство: 2/3 голосов
+            return vote.forVotes * 3 > totalVotes * 2;
+        } else if (quorumType == QuorumMechanism.SimpleMajority) {
+            //Простое большинство: 50% +1 голос
+            return totalVotes / 2 + 1 < vote.forVotes;
         }
+        revert(
+            unicode"Ошибка в 'DAO._quorumReached' QuorumTypes doesn't exist"
+        );
     }
 
     // Добавить участника в DAO
-    function addMember(address _member) internal {
+    function addMember(address _member) external onlyGovernance {  
         if (!isMember[_member]) {
             isMember[_member] = true;
         }
     }
 
     //  Удалить участника из DAO
-    function removeMember(address _member) internal {
+    function removeMember(address _member) external onlyGovernance {
         require(isMember[_member], unicode"Участник не найден");
         isMember[_member] = false;
     }
 
     // Установить новую силу голосования для PROFI
-    function setProfiPower(uint256 newProfiPower) internal {
+    function setProfiPower(uint256 newProfiPower) external onlyGovernance {
         profiPower = newProfiPower;
     }
 
     // Установить новую силу голосования для RTK
-    function setRtkPower(uint256 newRtkPower) internal {
+    function setRtkPower(uint256 newRtkPower) external onlyGovernance {
         rtkPower = newRtkPower;
     }
 
     //  Делегирование RTK-токенов (не DAO-участниками)
-    function delegateRTK(address to, uint256 amount) external {
-        require(
-            !isMember[msg.sender],
-            unicode"Участники DAO не могут делегировать таким способом"
-        );
+    function delegateRTK(address to) external {
         require(isMember[to], unicode"Делегировать можно только участнику DAO");
-
-        rtkCoin.transfer(msg.sender, to, amount);
-        delegatedRTK[to] += amount;
+        require(rtkCoin.balanceOf(msg.sender) > 0, unicode"Нет RTK токенов для делегирования");
+        rtkCoin.delegate(to); 
     }
 
     function setProposal(
@@ -219,7 +207,7 @@ contract MyGovernance is
         // устанавливаем задержку и период
         delay = _delay;
         period = _period;
-
+     
         address[] memory targets = new address[](1);
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
@@ -229,8 +217,8 @@ contract MyGovernance is
             values[0] = amount * 1 ether;
             calldatas[0] = abi.encodeWithSignature(
                 "transfer(uint256)",
-                amount * 1 ether // Передаем в wei
-            );
+                amount * 1 ether
+            ); // Передаем в wei;
         } else if (proposeType == ProposeType.C) {
             // добавление нового участника
             targets[0] = target;
@@ -268,19 +256,16 @@ contract MyGovernance is
 
         // сохраняем метаданные
         proposeMapping[ID] = ProposeLib({
-            proposeID: ID,
-            proposeType: proposeType,
+            proposeId: ID,
+            targets: targets,
+            values: values,
+            calldatas: calldatas,
             proposer: msg.sender,
             voteEnd: uint256(block.timestamp + _period),
+            proposeType: proposeType,
             quorumType: quorumType,
             status: ProposalState.Active
         });
-
-        voteData[ID].id = ID;
-        voteData[ID].targets = targets;
-        voteData[ID].values = values;
-        voteData[ID].calldatas = calldatas;
-        allProposalIDs.push(ID);
 
         return ID;
     }
@@ -296,12 +281,14 @@ contract MyGovernance is
             unicode"Уже голосовал"
         );
 
-        ProposalVote storage pv = _proposalVotes[proposalID];
+        ProposalVote storage vote = _proposalVotes[proposalID];
+
+        uint256 weight = _calculateVotingPower(msg.sender, amount);
 
         if (support == false) {
-            pv.againstVotes += amount;
+            vote.againstVotes += weight;
         } else if (support == true) {
-            pv.forVotes += amount;
+            vote.forVotes += weight;
         }
         profiCoin.transfer(msg.sender, address(this), amount);
         customHasVoted[proposalID][msg.sender] = true;
@@ -312,17 +299,17 @@ contract MyGovernance is
         return amount;
     }
 
-    //  Отменить предложение (только инициатор)   
+    //  Отменить предложение (только инициатор)
     function cancelProposal(uint256 proposalID) external onlyMember {
         ProposeLib storage prop = proposeMapping[proposalID];
         require(
             msg.sender == prop.proposer,
             unicode"Только инициатор может отменить"
         );
-        prop.status = ProposalState.Canceled;
 
         // Возвращаем токены всем проголосовавшим пользователям
         address[] storage voters = votersForProposal[proposalID];
+
         for (uint256 i = 0; i < voters.length; i++) {
             address voter = voters[i];
             uint256 amount = lockedTokens[proposalID][voter];
@@ -332,82 +319,30 @@ contract MyGovernance is
             }
         }
 
-        Vote storage v = voteData[proposalID];
         super.cancel(
-            v.targets,
-            v.values,
-            v.calldatas,
+            prop.targets,
+            prop.values,
+            prop.calldatas,
             keccak256(abi.encodePacked(""))
         );
     }
 
-    // Выполнить предложение, если голосование завершено
-    function callExecute(uint256 proposalID) external payable onlyMember {
-        ProposeLib storage prop = proposeMapping[proposalID];
-        require(
-            prop.status == ProposalState.Active,
-            unicode"Голосование не активно"
-        );
-
-        ProposalVote storage result = _proposalVotes[proposalID];
-
-        // Проверка кворума
-        bool approved = _checkQuorum(result, prop.quorumType);
-
-        Vote storage v = voteData[proposalID];
-
-        if (!approved) {
-            return;
-        }
-
-        // В зависимости от типа предложения выполняем соответствующее действие
-        if (
-            prop.proposeType == ProposeType.A ||
-            prop.proposeType == ProposeType.B
-        ) {
-            // Тип A и B - перевести средства на адрес стартапа
-            address startup = abi.decode(v.calldatas[0], (address));
-            uint256 amount = v.values[0];
-            // Выполняем перевод
-            payable(startup).transfer(amount);
-        } else if (prop.proposeType == ProposeType.C) {
-            // Тип C - добавить нового участника
-            address newMember = abi.decode(v.calldatas[0], (address));
-
-            // Добавляем нового участника в DAO
-            addMember(newMember);
-        } else if (prop.proposeType == ProposeType.D) {
-            // Тип D - удалить участника
-            address memberToRemove = abi.decode(v.calldatas[0], (address));
-
-            // Удаляем участника из DAO
-            removeMember(memberToRemove);
-        } else if (prop.proposeType == ProposeType.E) {
-            // Тип E - изменить силу голосов для PROFI
-            uint256 newProfiPower = v.values[0];
-
-            // Обновляем силу голосов для PROFI
-            setProfiPower(newProfiPower);
-        } else if (prop.proposeType == ProposeType.F) {
-            // Тип F - изменить силу голосов для RTK
-            uint256 newRtkPower = v.values[0];
-            // Обновляем силу голосов для RTK
-            setRtkPower(newRtkPower);
-        }
-
-        super.execute(
-            v.targets,
-            v.values,
-            v.calldatas,
-            keccak256(abi.encodePacked(""))
-        );
-
-        // Если предложение одобрено, меняем статус на "Approved"
-        prop.status = ProposalState.Executed;
+    function executePropose(uint256 proposalId)
+        public
+        payable
+        returns (uint256)
+    {
+        return
+            super.execute(
+                proposeMapping[proposalId].targets,
+                proposeMapping[proposalId].values,
+                proposeMapping[proposalId].calldatas,
+                ""
+            );
     }
 
     //  Получить балансы пользователя
-    function getBalance()
+    function getPerson()
         external
         view
         returns (
@@ -429,26 +364,27 @@ contract MyGovernance is
     }
 
     // получение информации о предложении
-    function getProposalFull(uint256 proposalID)
+    function getProposalFull(uint256 proposalId)
         external
         view
-        returns (
-            uint256 proposeID,
-            uint8 proposeType,
-            address proposer,
-            uint256 voteEnd,
-            uint8 quorumType,
-            uint8 status
-        )
+        returns (ProposeLib memory)
     {
-        return (
-            proposeMapping[proposalID].proposeID,
-            uint8(proposeMapping[proposalID].proposeType),
-            proposeMapping[proposalID].proposer,
-            uint256(proposeMapping[proposalID].voteEnd),
-            uint8(proposeMapping[proposalID].quorumType),
-            uint8(proposeMapping[proposalID].status)
-        );
+        ProposeLib storage prop = proposeMapping[proposalId]; // Сначала получаем из storage
+
+        // Теперь собираем копию в memory
+        ProposeLib memory data = ProposeLib({
+            proposeId: prop.proposeId,
+            targets: prop.targets,
+            values: prop.values,
+            calldatas: prop.calldatas,
+            proposer: prop.proposer,
+            voteEnd: prop.voteEnd,
+            proposeType: prop.proposeType,
+            quorumType: prop.quorumType,
+            status: prop.status
+        });
+
+        return data;
     }
 
     function getProposalVotes(uint256 proposalID)
@@ -458,19 +394,5 @@ contract MyGovernance is
     {
         ProposalVote storage vote = _proposalVotes[proposalID];
         return (vote.forVotes, vote.againstVotes);
-    }
-
-    //функция возвращает информации о
-    function getVoteData(uint256 proposalID)
-        external
-        view
-        returns (
-            uint256 id,
-            address[] memory targets,
-            uint256[] memory values
-        )
-    {
-        Vote storage vote = voteData[proposalID];
-        return (vote.id, vote.targets, vote.values);
     }
 }

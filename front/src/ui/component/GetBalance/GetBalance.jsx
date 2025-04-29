@@ -10,7 +10,7 @@ const GetBalance = () => {
 
     useEffect(() => {
         (async () => {
-            const info = await ServiceVoting.getBalance(wallet);
+            const info = await ServiceVoting.getPerson(wallet);
             setBalance(info);
             console.log(info);
         }) ()

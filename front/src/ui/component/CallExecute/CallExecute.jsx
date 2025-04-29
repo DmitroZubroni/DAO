@@ -10,7 +10,8 @@ const CallExecute = () => {
     const handleSubmit = async e => {
         e.preventDefault();
         const proposalID = Number(e.target[0].value);
-        await ServiceVoting.callExecute(proposalID ,wallet);
+        const valueAmount = Number(e.target[1].value);
+        await ServiceVoting.callExecute(proposalID, valueAmount ,wallet);
     };
 
     return (
@@ -19,6 +20,15 @@ const CallExecute = () => {
             <FormGroup>
                 <FormLabel column={1}>
                     ID предложения
+                </FormLabel>
+
+                <FormControl type="number" placeholder="1, 2, 3 ..." min={1}/>
+
+            </FormGroup>
+
+            <FormGroup>
+                <FormLabel column={1}>
+                    количество ether
                 </FormLabel>
 
                 <FormControl type="number" placeholder="1, 2, 3 ..." min={1}/>
